@@ -1,0 +1,23 @@
+  // form(action='/topic/add' id='from' method='post')
+extends ../layout
+block content
+  artcle
+
+      p
+        input(type='text' id='title' name='title' placeholder='title')
+      p
+        textarea(id='description' name='description' placeholder='description')
+      p
+        input(type='text' id='author' name='author' placeholder='author')
+      p
+        button#submit 전송
+        script.
+            var socket = io.connect();
+            $('#submit').on('click', function(){
+            socket.emit('notice', {
+            title: $('#title').val(),
+            description: $('#description').val(),
+            author: $('#author').val()
+            });
+            //$('#from').submit();
+            });

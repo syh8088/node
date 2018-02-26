@@ -1,0 +1,69 @@
+doctype html
+html
+  head
+    title Mobile Chat
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel='stylesheet', href='https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css')
+    script(src='https://code.jquery.com/jquery-1.12.4.js')
+    script(src='https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js')
+    script(src='/socket.io/socket.io.js')
+    script.
+      $(document).ready(function(){
+      var socket = io.connect();
+      socket.on('message', function(data){
+      var output ='';
+      output += '<li>';
+      output += '<h3>' + data.name + '</h3>';
+      output += '<p>' + data.message + '</p>';
+      output += '<p>' + data.date + '</p>';
+      output += '<li>';
+      // 문자 객체를 추가합니다.
+      $(output).prependTo('#content');
+      $('#content').listview('refresh');
+      $('#message').val('');
+      });
+      $('button').on('click', function(){
+         var msg = $('#message').val();
+         if(!$('#name').val()) {
+           alert('닉네임을 설정해주세요. (ニックネームを設定してください。)');
+           location.href='/chat';
+           return false;
+         }
+         if(msg === '') {
+           alert('메세지를 입력해주세요. (メッセージを入力してください。)');
+           $('#message').focus();
+           return false;
+        }
+       socket.emit('message', {
+
+         name: $('#name').val(),
+         message: $('#message').val(),
+         data: new Date().toUTCString()
+       });
+
+      });
+      });
+    head
+  body
+    div(data-role='page')
+      div(data-role='header')
+        h1 Socket.io Chat
+      div(data-role='content')
+        h3 Nick Name 설정하기(設定しましょう)
+        input#name
+        a(data-role='button', href='#chatpage') Start Chart
+    #chatpage(data-role='page')
+      div(data-role='header')
+        h1 Socket.io Chat
+      div(data-role='content')
+        input#message
+        button Button
+        ul#content(data-role='listview', data-inset='true')
+        each data, i in datas
+         ul#content.ui-listview.ui-listview-inset.ui-corner-all.ui-shadow(data-role='listview', data-inset='true')
+          li.ui-li-static.ui-body-inherit.ui-first-child
+            h3 #{data.name}
+            p #{data.content}
+            p #{data.register_date}
+            li.ui-li-static.ui-body-inherit.ui-last-child
+

@@ -1,0 +1,88 @@
+@charset "utf-8";
+/* CSS Document */
+
+body {
+	background:#e9eaed;	
+	color:$333;
+}
+
+@media (min-width: 900px) {
+	.adjuestment {
+		margin:0px auto;
+		width:850px;	
+		font-size:9pt;
+	}
+	
+	article { 
+		margin:20px;
+		padding:20px;
+	}
+
+
+}
+
+@media (max-width: 900px) {
+	.adjuestment {
+		margin:0;
+		width:100%;
+	}
+	
+	article { 
+		margin:10px;
+		padding:10px;
+	}
+
+}
+
+
+article { 
+	background:#fff;
+	border:1px solid #dfe0e4;
+	border-radius:5px;
+}
+
+
+h1 {
+	margin:0px;	
+}
+
+.comment-item {
+	border:1px solid #dfe0e4;
+	baclground:#f6f7f8;	
+	margin-bottom:10px;
+	padding:10px;
+	border-left:3px solid #d3d6db;
+}
+
+.flash {
+	background:#ff0;	
+}
+
+.comment-item div {
+	
+}
+
+.comment-form .itemlist-1 {
+	padding:5px 0px 5px 0px;
+}
+
+.comment-form .itemlist-2 {
+	padding:5px 0px 5px 0px;
+}
+
+.comment-form .itemlist-2 textarea {
+	width:99%;	
+}
+
+.comment-form .itemlist-3 {
+	padding:5px 0px 5px 0px;
+}
+
+.comment-form .itemlist-3 input[type="button"] {
+	width:100%;
+	padding:7px 0px 7px 0px;
+	background:#5e84d1;
+	color:#fff;
+	font-weight:bold;
+	border:1px solid #3b5998;
+}

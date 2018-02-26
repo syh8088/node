@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>실시간 덧글</title>
+<style type="text/css"> @import url('css/common.css');</style>
+<script type="text/javascript" src="scripts/jquery.js"></script>
+<script type="text/javascript" src="scripts/rc.js"></script>
+<script type="text/javascript" src="http://13.124.113.162:8090/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function(e) {
+	var socket;
+	try {
+		socket = io.connect('http://13.124.139.77:8090/node/real/');
+		socket.on('broadcast', function (data) {
+			addComment(data.id, data.comment);
+		});
+	}
+	catch(e) {
+		$('.comment-form').html('지금은 덧글을 달 수 없습니다.');
+	}
+
+	$('#comment').keypress(function(evt) {
+		if(evt.which == 13) {
+			evt.preventDefault();
+			$('#btn').click();
+		}
+	});
+
+
+	$('#btn').click(function() {
+
+		if($('#name').val().length < 3) {
+			alert('성명을 입력하십시오');
+			return false
+		}
+
+		if($('#comment').val().length < 5) {
+			alert('내용을 입력하십시오');
+			return false
+		}
+
+		socket.emit('written', { writtenBy : $('#name').val(), comment:$('#comment').val() });
+
+
+		$('.comment').html($('#comment').val());
+		$('#comment').focus();
+	});
+});
+
+
+addComment = function(id, msg) {
+	var $newComment = $('<div class="comment-item flash"></div>');
+	var $p = $('<p></p>');
+	$newComment.html('<b>' + id + '</b>님의 말씀 :<br>');
+	$p.html(msg);
+	$('#fullPage');
+
+
+	$p.appendTo($newComment);
+
+	$('.comment').prepend($newComment);
+
+	$('.flash').animate({backgroundColor: 'white'}, 2000, function() {
+		$('.flash').removeClass('flash');
+	});
+
+};
+</script>
+</head>
+
+<body>
+<div class="adjuestment">
+	<article>
+    	<h1>실시간 덧글 업데이트 예제</h1>
+        <p>
+        	여기는 게시글 내용 영역.<br>
+            브라우저를 2개 이상 동시에 띄우시면 쉽게 확인하실 수 있습니다.
+        </p>
+         <div class="comment-form">
+            	<div class="itemlist-1"><input type="text" namn="name" id="name"  placeholder="성명(3자 이상)"></div>
+            	<div class="itemlist-2"><textarea name="comment" id="comment" placeholder="내용(5자 이상)" ></textarea></div>
+            	<div class="itemlist-3"><input type="button" value="작성" id="btn" ></div>
+            </div>
+        <div class="comment">
+        	<!-- 덧글 표시 부분입니다. -->
+
+
+
+        </div>
+
+
+    </article>
+</div>
+</body>
+</html>

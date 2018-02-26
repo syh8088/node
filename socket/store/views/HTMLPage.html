@@ -1,0 +1,138 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+		<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+		<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			$(document).ready(function(){
+				// 함수를 선언 합니다.
+				function changeIcon(target, from, to) {
+					$(target).removeClass(from).addClass(to);
+				}
+
+				function changeCountDown(index, count) {
+					$('li[data-index=' + index + '] .ui-li-count').html("카트 카운트 다운 : " + count);
+				}
+
+				function changeCount(index, count) {
+					$('li[data-index=' + index + '] .ui-li-count').html("수량 : " + count);
+				}
+
+				// 소켓을 설정 합니다.
+				var socket = io.connect();
+
+				// 소켓 이벤트를 연결합니다.
+				socket.on('countDown', function(data) {
+					// 물건 개수를 변경합니다.
+					changeCountDown(data.index, data.count_down);
+				});
+
+				// 초기화
+				socket.on('init_count', function(data) {
+					var $taget = $('li[data-index=' + data.index + '] .ui-icon-check');
+					// 아이콘 및 테마 변환
+					changeIcon($taget, 'ui-icon-check', 'ui-icon-heart');
+
+					changeCount(data.index, data.count);
+
+					// 토글 변수를 변경합니다.
+					$taget.removeAttr('toggle');
+				});
+
+
+				// 문서 객체 이벤트를 연결합니다.
+				$('.product > a[data-icon]').on('click', function(){
+
+					<% if(!user) { %>
+						alert('로그인 부터 해주세요.');
+						location.href = '/auth/login';
+						return false;
+					<% } %>
+
+					if($(this).attr('toggle') !== 'off') {
+
+						// 변수를 선언합니다.
+						var index = $(this).attr('data-index');
+
+						// 소켓 이벤트를 발생시킵니다.
+						socket.emit('cart', Number(index));
+
+						// 아이콘 및 테마 변환
+						changeIcon(this, 'ui-icon-heart', 'ui-icon-check');
+
+						// 토글 변수를 변경합니다.
+						$(this).attr('toggle', 'off');
+
+					} else {
+
+						// 변수를 선언합니다.
+						var index = $(this).attr('data-index');
+
+						// 구매 의사를 물어홉니다.
+						if(confirm('물건을 구매하시겠습니까?')) {
+
+							// 소켓 이벤트를 발생시킵니다.
+							socket.emit('buy', Number(index));
+
+							// 리스트 아이템을 제거합니다.
+							$(this).parent().remove();
+							$('#listview').listview('refresh');
+
+						} else {
+
+							// 소켓 이벤트를 발생시킵니다.
+							socket.emit('return', Number(index));
+
+							// 아이콘 및 테마 변환
+							changeIcon(this, 'ui-icon-check', 'ui-icon-heart');
+						}
+
+						// 토글 변수를 변경합니다.
+						$(this).attr('toggle', 'on');
+					}
+
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div data-role='page'>
+
+			<div data-role="header">
+				<h1>Store</h1>
+
+				<% if(user) { %>
+					<h2><a href="/auth/logout">logout</a></h2>
+					<h3><%= user.displayName %>님 안녕하세요.</h3>
+				<% } else { %>
+					<h2><a href="/auth/login">login</a></h2>
+					<h3><a href="/auth/register">register</a></h3>
+				<% } %>
+
+			</div>
+			<div data-role="content">
+				<ul id='listview' data-role='listview' data-inset='true' data-filter='true'>
+					<li data-role='list-divder'>products</li>
+					<% products.forEach(function(item, index) { %>
+					<li class='product' data-index="<%= item.index %>">
+						<a href="#">
+							<img src="http://localhost/node/socket/store/chrome.png" />
+							<h3><%= item.name %></h3>
+							<p><%= item.price %>원</p>
+							<span class="ui-li-count">수량 : <%= item.count %></span>
+						</a>
+						<a href="#" data-icon="heart" data-index="<%= item.index %>"></a>
+
+					</li>
+					<% }); %>
+				</ul>
+			</div>
+
+		</div>
+
+	</body>
+
+</html>

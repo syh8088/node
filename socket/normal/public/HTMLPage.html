@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.io Basic</title>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <button id="my_button">Click</button>
+  <script>
+    // 변수를 선언합니다.
+    var socket = io.connect();
+    var roomName = prompt('방 이름을 입력해주세요', '');
+    // 클라이언트를 방에 배정합니다.
+    socket.emit('joinABCD', {
+      roomName: roomName
+    });
+    // 버튼을 클릭하면 문자열을 전달합니다.
+    var button = document.getElementById('my_button');
+    button.onclick = function () {
+      socket.emit('message', {
+        message: 'From Client'
+      });
+    };
+    // 소켓 이벤트를 연결합니다.
+    socket.on('message', function (data) {
+      alert(data.message);
+    });
+  </script>
+</body>
+</html>

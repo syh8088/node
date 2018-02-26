@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" href="http://13.124.224.231/node/socket/canvas/public/farbtastic.css" />
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="http://13.124.224.231/node/socket/canvas/public/farbtastic.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
+	<script>
+
+		var isEraser = false;
+
+		// Point 생성자 함수를 생성합니다.
+		function Point(event, target) {
+			this.x = event.pageX - $(target).position().left;
+			this.y = event.pageY - $(target).position().top;
+		}
+
+		function eraser() {
+			isEraser = true;
+		}
+
+		$(document).ready(function(){
+
+			setTimeout(function(){
+				load();
+			}, 1000);
+
+			// Canvas 객체를 추출합니다.
+			var canvas = document.getElementById('canvas');
+			var context = canvas.getContext('2d');
+
+			// 변수를 선언합니다.
+			var width = 5;
+			var opacity = 1.0;
+			var pressure = 1.0;
+			var color = '#000000';
+			var isDown = false;
+			var newPoint, oldPoint;
+
+
+			// UI를 구성합니다.
+			$('#colorpicker').farbtastic(function(data){
+				color = data;
+			});
+
+			// 이벤트를 연결합니다.
+			canvas.addEventListener('mousedown', function(event){
+				isDown = true;
+				oldPoint = new Point(event, this);
+			});
+
+			canvas.addEventListener('mouseup' , function() {
+				isDown = false;
+				isEraser = false;
+				html2img();
+			});
+
+			canvas.addEventListener('mousemove', function(event) {
+				if(isDown) {
+					newPoint = new Point(event, this);
+					socket.emit('draw', {
+						width: width,
+						color: color,
+						x1: oldPoint.x,
+						y1: oldPoint.y,
+						x2: newPoint.x,
+						y2: newPoint.y
+					});
+					oldPoint = newPoint;
+				}
+			});
+
+
+		canvas.addEventListener('touchstart', function(event) {
+				isDown = true;
+				oldPoint = new Point(event, this);
+		});
+
+
+		canvas.addEventListener('touchmove', function(event) {
+
+				if(isDown) {
+					newPoint = new Point(event, this);
+					socket.emit('draw', {
+						width: width,
+						color: color,
+						x1: oldPoint.x,
+						y1: oldPoint.y,
+						x2: newPoint.x,
+						y2: newPoint.y
+					});
+					oldPoint = newPoint;
+				}
+
+		});
+
+		canvas.addEventListener('touchend', function(event) {
+			isDown = false;
+			isEraser = false;
+			html2img();
+		});
+
+
+
+
+
+			$('#sliderA').change(function(){
+				width = $(this).val();
+			});
+
+			$('#sliderB').change(function(){
+				opacity = $(this).val() / 100;
+			});
+
+			// 소켓 이벤트를 연결합니다.
+			var socket = io.connect();
+			socket.emit('join', '<%= room %>');
+			socket.on('line', function(data){
+				context.lineWidth = data.width;
+				context.strokeStyle = data.color;
+
+
+				if(isEraser) {
+					context.globalCompositeOperation = "destination-out";
+					context.globalAlpha = 1.0;
+				} else {
+					context.globalCompositeOperation = "source-over";
+					context.globalAlpha = opacity * pressure;
+				}
+
+				context.beginPath();
+				context.moveTo(data.x1, data.y1);
+				context.lineTo(data.x2, data.y2);
+				context.stroke();
+				//context.save();
+
+			});
+
+
+			socket.on('load', function(data){
+				var canvas = document.getElementById('canvas');
+				var context = canvas.getContext('2d');
+
+				var image = new Image();
+				image.onload = function() {
+					context.drawImage(image, 10, 10);
+				};
+				image.src = data;
+			});
+
+			function html2img() {
+				var canvas ="";
+				html2canvas($("#canvas"), {
+					//onrendered: function(canvas) {
+
+					//useCORS: true,
+					//proxy: '/etc/proxy_image',
+					onrendered: function(canvas) {
+						var image = canvas.toDataURL();
+						//meta.cmn.submitHiddenForm("/etc/bypass_image", { image : image });
+						var socket = io.connect();
+						socket.emit('upload', {
+							room: '<%= room %>',
+							image: image
+						});
+
+					}
+				});
+			}
+
+			function load() {
+					var canvas = document.getElementById('canvas');
+					var context = canvas.getContext('2d');
+
+					//img1, img2 불러오기
+					//var img1 = document.getElementById("source");
+					var img2 = document.getElementById("frame");
+
+					//ctx=>img1 그리기
+					//ctx=>img2 그리기
+					//context.drawImage(img1, 200, 100, 300, 200, 30, 30, 300, 200);
+					//context.drawImage(img2, 10, 10 );
+
+
+					var image = new Image();
+					image.onload = function() {
+						context.drawImage(image, 10, 10);
+					};
+					image.src = '<%= imgBase64 %>';
+			}
+
+
+		});
+
+
+	</script>
+</head>
+
+<body>
+	<table border="10">
+		<tr>
+			<td rowspan="3">
+				<!-- 캔버스 -->
+				<canvas id="canvas" width="1200" height="800"></canvas>
+
+				<!-- <div style="visibility: hidden;">
+					<img id="source" src="http://13.124.224.231/node/socket/canvas/images/flower2.jpg" width="1200" height="800">
+					<img id="frame" src="http://13.124.224.231/node/socket/canvas/images/<%= room %>.png" width="1200" height="800">
+				</div> -->
+
+			</td>
+			<td height="200">
+				<!-- 색상 선택기 -->
+				<div id="colorpicker"></div>
+			</td>
+		</tr>
+		<tr>
+			<td height="25">
+				<!-- 슬라이더: 두께 선택 -->
+				<input id="sliderA" type="range" min="0" max="20" value="5" />두께<br />
+				<!-- 슬라이더: 투명도 선택 -->
+				<input id="sliderB" type="range" min="0" max="100" />투명도<br />
+
+				<!-- 지우개 -->
+				<input type="button" onclick="eraser();" value="지우개">
+			</td>
+		</tr>
+		<tr>
+			<td style="background: orange;"></td>
+		</tr>
+	</table>
+</body>
+</html>
